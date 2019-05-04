@@ -32,29 +32,29 @@ fps = 60
 -- | The starting state for the game of Pong.
 initialState :: BreakoutGame
 initialState = Game
-  { ball = Ball { bPosition = (-10, 30), bRadius = 10, bVelocity = (30, -33)}
-  , paddle = Paddle { pPosition = (40, - (height / 2) + 26), pWidth = 86, pHeight = 26, pVelocity = (0, 0 )}
-  , walls = [ Wall { wHeight = 10, wWidth = width, wPosition = (0, (height / 2) - 5) },
-              Wall { wHeight = height, wWidth = 10, wPosition = ((width / 2) - 5, 0) },
-              Wall { wHeight = height, wWidth = 10, wPosition = (-(width / 2) + 5, 0) }
+  { _ball = Ball { _bPosition = (-10, 30), _bRadius = 10, _bVelocity = (30, -33)}
+  , _paddle = Paddle { _pPosition = (40, - (height / 2) + 26), _pWidth = 86, _pHeight = 26}
+  , _walls = [ Wall { _wHeight = 10, _wWidth = width, _wPosition = (0, (height / 2) - 5) },
+              Wall { _wHeight = height, _wWidth = 10, _wPosition = ((width / 2) - 5, 0) },
+              Wall { _wHeight = height, _wWidth = 10, _wPosition = (-(width / 2) + 5, 0) }
             ]
-  , actions = []
+  , _actions = []
   }
 
 handleKeys :: Event -> BreakoutGame -> BreakoutGame
 -- 'h' = movePaddle left
-handleKeys (EventKey (Char 'h') _ _ _) game = game { actions = (MoveLeft : as) }
+handleKeys (EventKey (Char 'h') _ _ _) game = game { _actions = (MoveLeft : as) }
   where
-    as = actions game
+    as = _actions game
 -- 'l' = movePaddle right
-handleKeys (EventKey (Char 'l') _ _ _) game = game { actions = (MoveRight : as) }
+handleKeys (EventKey (Char 'l') _ _ _) game = game { _actions = (MoveRight : as) }
   where
-    as = actions game
+    as = _actions game
 -- For an 's' keypress, reset the ball to the center.
-handleKeys (EventKey (Char 's') _ _ _) game = game { ball = b' }
+handleKeys (EventKey (Char 's') _ _ _) game = game { _ball = b' }
   where
-    b = ball game
-    b' = b {bPosition = (0, 0)}
+    b = _ball game
+    b' = b {_bPosition = (0, 0)}
 -- Do nothing for all other events.
 handleKeys _ game = game
 

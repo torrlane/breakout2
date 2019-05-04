@@ -1,12 +1,11 @@
 module Engine where
 
--- | Data describing the state of the pong game.
 data BreakoutGame = Game
   { 
-    ball :: Ball
-  , paddle :: Paddle           -- ^ player paddle
-  , walls :: [Wall] -- ^ walls surrounding the playing area
-  , actions :: [Action] -- ^ actions that have occurred, but not yet been processed
+    _ball :: Ball
+  , _paddle :: Paddle
+  , _walls :: [Wall] -- ^ walls surrounding the playing area
+  , _actions :: [Action] -- ^ actions that have occurred, but not yet been processed
   } deriving Show
 
 data Action = MoveLeft | MoveRight deriving Show
@@ -16,22 +15,16 @@ type Position = (Float, Float)
 type Velocity = (Float, Float)
 type Radius = Float
 
-data Wall = Wall { wHeight :: Float, wWidth :: Float, wPosition :: Position} deriving Show
-data Ball = Ball { bPosition :: Position, bRadius :: Radius, bVelocity :: Velocity} deriving Show
-data Paddle = Paddle { pPosition :: Position, pWidth :: Float, pHeight :: Float, pVelocity :: Velocity } deriving Show
+data Wall = Wall { _wHeight :: Float, _wWidth :: Float, _wPosition :: Position} deriving Show
+data Ball = Ball { _bPosition :: Position, _bRadius :: Radius, _bVelocity :: Velocity} deriving Show
+data Paddle = Paddle { _pPosition :: Position, _pWidth :: Float, _pHeight :: Float } deriving Show
 
 data BlockState = Empty | Block
 type BlockGrid = [[BlockState]]
 
-
--- data Game = Game { ball :: Ball, paddle :: Paddle, grid :: BlockGrid }
 data PlayerStatistics = PlayerStatistics {score :: Int, level :: Int }
-
 data GameDisplay = GameDisplay {blockwidth :: Float, blockHeight :: Float}
 
-
--- globals:
--- blockWidth, blockHeight, ballRadius, paddleWidth, paddleHeight
 
 
 width, height :: Float
@@ -41,31 +34,31 @@ height = 300
 moveBall :: Seconds    -- ^ The number of seconds since last update
          -> BreakoutGame -- ^ The initial game state
          -> BreakoutGame -- ^ A new game state with an updated ball position
-moveBall seconds game = game { ball = b' }
+moveBall seconds game = game { _ball = b' }
   where
-    b = ball game
+    b = _ball game
     -- Old locations and velocities.
-    (x, y) = bPosition b
-    (vx, vy) = bVelocity b
+    (x, y) = _bPosition b
+    (vx, vy) = _bVelocity b
     -- New locations.
     x' = x + vx * seconds
     y' = y + vy * seconds
-    b' = b { bPosition = (x', y') }
+    b' = b { _bPosition = (x', y') }
 
 performActions :: BreakoutGame -> BreakoutGame
-performActions game = game { paddle = paddle', actions = [] }
+performActions game = game { _paddle = paddle', _actions = [] }
   where
-    as = actions game
-    p = paddle game
+    as = _actions game
+    p = _paddle game
     paddle' = foldr movePaddle p as
 
 movePaddle :: Action -> Paddle -> Paddle
-movePaddle a p = p { pPosition = (pxNew a, py)}
+movePaddle a p = p { _pPosition = (pxNew a, py)}
   where
-    pp = pPosition p
+    pp = _pPosition p
     px = fst pp
     py = snd pp
-    pw = pWidth p
+    pw = _pWidth p
     w = (width / 2) - (pw / 2)
     pxNew MoveLeft = max (px - 10) (-w)
     pxNew MoveRight = min (px + 10) w
@@ -78,18 +71,18 @@ wallCollision (_, y) radius = topCollision || bottomCollision
     bottomCollision = y + radius >= (width / 2)
 
 wallBounce :: BreakoutGame -> BreakoutGame
-wallBounce game = game { ball = b'  }
+wallBounce game = game { _ball = b'  }
   where
-    b = ball game
-    r = bRadius b
+    b = _ball game
+    r = _bRadius b
     -- The old velocities.
-    (vx, vy) = bVelocity b
-    vy' = if wallCollision (bPosition b) r
+    (vx, vy) = _bVelocity b
+    vy' = if wallCollision (_bPosition b) r
           then
              -- Update the velocity.
              -vy
            else
             -- Do nothing. Return the old velocity.
             vy
-    b' = b { bVelocity= (vx, vy') }
+    b' = b { _bVelocity= (vx, vy') }
 
