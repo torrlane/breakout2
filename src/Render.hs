@@ -15,11 +15,11 @@ render game =
   pictures [renderBall game, renderWalls game, renderPaddle game]
 
 renderBall :: BreakoutGame -> Picture
-renderBall game = uncurry translate p $ color ballColor $ circleSolid r
+renderBall game = translate x y $ color ballColor $ circleSolid r
   where
     b = _ball game
-    p = _bPosition b
     r = _bRadius b
+    (x, y) = _bPosition b
 
 renderPaddle :: BreakoutGame -> Picture
 renderPaddle game = pictures
@@ -28,8 +28,7 @@ renderPaddle game = pictures
   ]
   where
     p = _paddle game
-    x = fst $ _pPosition p
-    y = snd $ _pPosition p
+    (x, y) = _pPosition p
     w = _pWidth p
     h = _pHeight p
 
@@ -38,15 +37,22 @@ paddleInnerColor = light (light blue)
 paddleOuterColor = rose
 
 renderWalls :: BreakoutGame -> Picture
-renderWalls game = pictures $ map renderWall $ _walls game
+renderWalls game = pictures $ map renderWall $ _walls
+  where
+    wallWidth = _wallWidth game
+    horizStart = (width - wallWidth) / 2
+    vertStart = (height - wallWidth) / 2
+    topWall = Wall { _wHeight = wallWidth, _wWidth = width, _wPosition = (0, vertStart) }
+    rightWall = Wall { _wHeight = height, _wWidth = wallWidth, _wPosition = (horizStart, 0) }
+    leftWall = Wall { _wHeight = height, _wWidth = wallWidth, _wPosition = (-horizStart, 0) }
+    _walls = [ topWall, rightWall, leftWall ]
 
 renderWall :: Wall -> Picture
 renderWall wall = translate x y $
         color wallColor $
           rectangleSolid w h
   where
-    x = fst (_wPosition wall)
-    y = snd (_wPosition wall)
+    (x, y) = _wPosition wall
     w = _wWidth wall
     h = _wHeight wall
 

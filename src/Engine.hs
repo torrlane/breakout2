@@ -1,11 +1,14 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Engine where
+
+import Control.Lens
 
 data BreakoutGame = Game
   { 
     _ball :: Ball
   , _paddle :: Paddle
-  , _walls :: [Wall] -- ^ walls surrounding the playing area
   , _actions :: [Action] -- ^ actions that have occurred, but not yet been processed
+  , _wallWidth :: Float -- ^ the thickness of the game walls
   } deriving Show
 
 data Action = MoveLeft | MoveRight deriving Show
@@ -26,6 +29,9 @@ data PlayerStatistics = PlayerStatistics {score :: Int, level :: Int }
 data GameDisplay = GameDisplay {blockwidth :: Float, blockHeight :: Float}
 
 
+makeLenses ''BreakoutGame
+
+makeLenses ''Paddle
 
 width, height :: Float
 width = 300
@@ -46,43 +52,42 @@ moveBall seconds game = game { _ball = b' }
     b' = b { _bPosition = (x', y') }
 
 performActions :: BreakoutGame -> BreakoutGame
-performActions game = game { _paddle = paddle', _actions = [] }
+performActions game = game' { _actions = [] }
   where
     as = _actions game
-    p = _paddle game
-    paddle' = foldr movePaddle p as
+    game' = foldr movePaddle game as
 
-movePaddle :: Action -> Paddle -> Paddle
-movePaddle a p = p { _pPosition = (pxNew a, py)}
+-- Lens tutorial https://mmhaskell.com/blog/2017/6/12/taking-a-close-look-at-lenses
+movePaddle :: Action -> BreakoutGame -> BreakoutGame
+  -- set the x coordinate of position to the value (pxNew a x)
+movePaddle a game = game & (paddle . pPosition . _1) %~ (pxNew a) 
   where
-    pp = _pPosition p
-    px = fst pp
-    py = snd pp
-    pw = _pWidth p
-    w = (width / 2) - (pw / 2)
-    pxNew MoveLeft = max (px - 10) (-w)
-    pxNew MoveRight = min (px + 10) w
+    pw = view (paddle . pWidth) game 
+    maxWidth = (width / 2) - (pw / 2) - (_wallWidth game)
+    pxNew MoveLeft px = max (px - 10) (-maxWidth)
+    pxNew MoveRight px = min (px + 10) maxWidth
 
 -- | Given position and radius of the ball, return whether a collision occurred.
-wallCollision :: Position -> Radius -> Bool 
-wallCollision (_, y) radius = topCollision || bottomCollision
+vertWallCollision :: Position -> Float -> Radius -> Bool 
+vertWallCollision (_, y) w radius = topCollision || bottomCollision
   where
-    topCollision    = y - radius <= (width / 2)
-    bottomCollision = y + radius >= (width / 2)
+    topCollision    = y + radius >= (height / 2) - w
+    bottomCollision = y - radius <= -(height / 2) + w
+
+horizWallCollision :: Position -> Float -> Radius -> Bool 
+horizWallCollision (x, _) w radius = leftCollision || rightCollision
+  where
+    leftCollision    = x + radius >= (width / 2) - w
+    rightCollision = x - radius <= -(width / 2) + w
 
 wallBounce :: BreakoutGame -> BreakoutGame
 wallBounce game = game { _ball = b'  }
   where
     b = _ball game
     r = _bRadius b
-    -- The old velocities.
+    w = _wallWidth game
     (vx, vy) = _bVelocity b
-    vy' = if wallCollision (_bPosition b) r
-          then
-             -- Update the velocity.
-             -vy
-           else
-            -- Do nothing. Return the old velocity.
-            vy
-    b' = b { _bVelocity= (vx, vy') }
+    vy' = if vertWallCollision (_bPosition b) w r then -vy else vy
+    vx' = if horizWallCollision (_bPosition b) w r then -vx else vx
+    b' = b { _bVelocity= (vx', vy') }
 

@@ -32,13 +32,10 @@ fps = 60
 -- | The starting state for the game of Pong.
 initialState :: BreakoutGame
 initialState = Game
-  { _ball = Ball { _bPosition = (-10, 30), _bRadius = 10, _bVelocity = (30, -33)}
-  , _paddle = Paddle { _pPosition = (40, - (height / 2) + 26), _pWidth = 86, _pHeight = 26}
-  , _walls = [ Wall { _wHeight = 10, _wWidth = width, _wPosition = (0, (height / 2) - 5) },
-              Wall { _wHeight = height, _wWidth = 10, _wPosition = ((width / 2) - 5, 0) },
-              Wall { _wHeight = height, _wWidth = 10, _wPosition = (-(width / 2) + 5, 0) }
-            ]
+  { _ball = Ball { _bPosition = (-10, 30), _bRadius = 10, _bVelocity = (30, 30) }
+  , _paddle = Paddle { _pPosition = (40, - (height / 2) + 13), _pWidth = 86, _pHeight = 26}
   , _actions = []
+  , _wallWidth = 10
   }
 
 handleKeys :: Event -> BreakoutGame -> BreakoutGame
