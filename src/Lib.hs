@@ -17,7 +17,7 @@ start = play window background fps initialState render handleKeys update
 -- | Update the game by moving the ball.
 -- Ignore the ViewPort argument.
 update ::  Seconds -> BreakoutGame -> BreakoutGame
-update seconds = performActions . wallBounce . moveBall seconds
+update seconds = performActions . paddleBounce . wallBounce . moveBall seconds
 
 window :: Display
 window = InWindow "window" (round width, round height) windowPosition
@@ -26,13 +26,14 @@ windowPosition = (10, 10)
 
 -- | Number of frames to show per second.
 fps :: Int
-fps = 60
+fps = 30
 
 
 -- | The starting state for the game of Pong.
 initialState :: BreakoutGame
 initialState = Game
-  { _ball = Ball { _bPosition = (-10, 30), _bRadius = 10, _bVelocity = (30, 30) }
+  { _ball = Ball { _bPosition = (60, 30), _bRadius = 5, _bVelocity = (-60, -60), _tangent = 1 }
+  , _prevBall = Ball { _bPosition = (-10, 30), _bRadius = 1, _bVelocity = (-60, -60), _tangent = 1 }
   , _paddle = Paddle { _pPosition = (40, - (height / 2) + 13), _pWidth = 86, _pHeight = 26}
   , _actions = []
   , _wallWidth = 10
@@ -48,10 +49,7 @@ handleKeys (EventKey (Char 'l') _ _ _) game = game { _actions = (MoveRight : as)
   where
     as = _actions game
 -- For an 's' keypress, reset the ball to the center.
-handleKeys (EventKey (Char 's') _ _ _) game = game { _ball = b' }
-  where
-    b = _ball game
-    b' = b {_bPosition = (0, 0)}
+handleKeys (EventKey (Char 's') _ _ _) game = initialState
 -- Do nothing for all other events.
 handleKeys _ game = game
 
